@@ -146,5 +146,11 @@ During autumn and winter in Kazakhstan (especially in **Almaty**, **Astana**, **
 
 LangSmith tracing is enabled via `LANGCHAIN_TRACING_V2=true` and `LANGCHAIN_PROJECT=TazaAir` in `.env`, recording every user prompt, tool selection, API output, memory injection, and Pydantic parser step.
 
-- **Project Name:** `TazaAir`
-- **Trace Link / Screenshots:** *(Add your public LangSmith trace link or screenshot in `screenshots/` after running `python main.py` with your `LANGCHAIN_API_KEY`)*
+- **LangSmith Project:** `TazaAir`
+- **Public Shareable Trace Links:**
+  1. [Conversation 1 (Turn 1) — Almaty Smog, Wind & Cigarette Equivalent (`RunnableWithMessageHistory` + 3 Tools)](https://smith.langchain.com/public/081a46f8-c05e-4fc7-931f-18954493fabc/r)
+  2. [LCEL Structured Output Chain — `report_prompt | llm | parser` (`PydanticOutputParser` -> `AirSafetyCard`)](https://smith.langchain.com/public/c3f2378b-c813-4e7e-88ad-16f4ec1314c3/r)
+  3. [Conversation 1 (Turn 2 Follow-up) — Memory Recall (`3h walk`) & Medeu Highland Comparison](https://smith.langchain.com/public/0929b636-b63d-4d06-9c92-3719dda3a05c/r)
+  4. [Conversation 1 (Turn 3 Follow-up) — Saving Comparison to Local `diary.json`](https://smith.langchain.com/public/6804624f-108a-479d-99fb-23051a370416/r)
+  5. [Conversation 2 — Astana Air & Window Ventilation Check (Russian)](https://smith.langchain.com/public/ed7dcca8-e9a9-4306-b67c-392296c25e7d/r)
+  6. [Conversation 3 — Reading Local Diary & Graceful Error Handling (`WakandaForeverCity`)](https://smith.langchain.com/public/86febfa4-807e-476a-8381-3c40b115bd1a/r)
