@@ -1,0 +1,7 @@
+langchain
+langchain-classic
+langchain-google-genai
+langchain-core
+python-dotenv
+requests
+pydantic
