@@ -35,11 +35,14 @@ def run_live_chat():
                 print()
             continue
 
-        response = ask_agent(user_input, session_id="live_user")
-        last_answer = response["answer"]
-        tools_list = ", ".join(response["tools_used"]) if response["tools_used"] else "none (from memory)"
-        print(f"\n[Tools called: {tools_list}]")
-        print(f"TazaAir: {last_answer}\n")
+        try:
+            response = ask_agent(user_input, session_id="live_user")
+            last_answer = response["answer"]
+            tools_list = ", ".join(response["tools_used"]) if response["tools_used"] else "none (from memory)"
+            print(f"\n[Tools called: {tools_list}]")
+            print(f"TazaAir:\n{last_answer}\n")
+        except Exception as error:
+            print(f"\nTemporary error: {error}\nPlease try your message again.\n")
 
 
 def run_demo_conversations():
@@ -82,7 +85,7 @@ def run_demo_conversations():
             response = ask_agent(msg, session_id=demo["session_id"])
             tools_list = ", ".join(response["tools_used"]) if response["tools_used"] else "none"
             print(f"[Tools called: {tools_list}]")
-            print(f"TazaAir: {response['answer']}")
+            print(f"TazaAir:\n{response['answer']}")
 
             if demo["show_card_on_first"] and index == 0:
                 print_card(response["answer"])

@@ -21,12 +21,16 @@ warnings.filterwarnings("ignore")
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("Missing GEMINI_API_KEY in .env file.")
+
 if not os.getenv("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash-lite",
-    google_api_key=os.getenv("GEMINI_API_KEY"),
+    google_api_key=api_key,
     disable_streaming=True,
     max_retries=5,
 )
@@ -38,13 +42,14 @@ TOOLS = [
     air_diary,
 ]
 
-SYSTEM_PROMPT = """You are TazaAir, a smart Air Quality and Smog Shield assistant built for cities in Kazakhstan (such as Almaty, Astana, Karaganda, Ust-Kamenogorsk, and mountain spots like Medeu and Shymbulak) as well as any city worldwide.
+SYSTEM_PROMPT = """You are TazaAir, a smart Air Quality and Smog Shield assistant for cities and mountain spots in Kazakhstan (Almaty, Astana, Karaganda, Ust-Kamenogorsk, Medeu, Shymbulak, Kok-Zhailau, Big Almaty Lake, Burabay) and worldwide.
 
-Your strict rules:
-1. NEVER invent or guess air quality numbers, weather data, or math results. Always call your tools to get real-time data and exact calculations.
-2. When a user asks about air quality or going outside in a city, check `get_air_quality` (and `get_weather_and_wind` if wind/weather affects smog) and use `calculate_cigarettes` to translate PM2.5 into the scientific cigarette equivalent.
-3. Use `air_diary` whenever the user asks to save a note or view their saved air quality history.
-4. Strictly reply in the exact language of the user's latest message (if the user writes in English, reply in English; if in Russian, reply in Russian). Keep answers clear, structured with short bullet points, and practically helpful (mention window ventilation, outdoor walks, or FFP2 masks when relevant)."""
+Strict rules:
+1. NEVER guess numbers. Always call your tools to get real air quality, weather/wind, and cigarette calculations.
+2. When asked about air quality or going outside, call `get_air_quality` (and `get_weather_and_wind` when helpful) and `calculate_cigarettes`.
+3. Call `air_diary` ONLY when the user asks to save a note or read saved history.
+4. Reply strictly in the language of the user's latest message (Russian or English).
+5. Format cleanly for a plain terminal console: use simple '-' bullet points and do NOT use markdown asterisks (** or *)."""
 
 agent_prompt = ChatPromptTemplate.from_messages(
     [
@@ -57,17 +62,12 @@ agent_prompt = ChatPromptTemplate.from_messages(
 
 
 def extract_text(raw_output) -> str:
-    if isinstance(raw_output, str):
-        return raw_output
     if isinstance(raw_output, list):
-        parts = []
-        for item in raw_output:
-            if isinstance(item, dict) and "text" in item:
-                parts.append(item["text"])
-            elif isinstance(item, str):
-                parts.append(item)
-        return "\n".join(parts).strip()
-    return str(raw_output)
+        raw_output = "\n".join(
+            item["text"] if isinstance(item, dict) and "text" in item else str(item)
+            for item in raw_output
+        )
+    return str(raw_output).replace("**", "").strip()
 
 
 def normalize_output(result: dict) -> dict:
@@ -106,10 +106,10 @@ agent_with_memory = RunnableWithMessageHistory(
 
 class AirSafetyCard(BaseModel):
     city: str = Field(description="City or location name")
-    smog_status: str = Field(description="Short smog status, e.g. Clean, Moderate, or Heavy Smog")
+    smog_status: str = Field(description="Short smog status: Clean, Moderate, or Heavy Smog")
     cigarettes_per_day: float = Field(description="Equivalent cigarettes inhaled per 24 hours")
     window_advice: str = Field(description="Short advice on opening or closing windows")
-    mask_needed: bool = Field(description="True if wearing an FFP2/N95 mask outside is recommended")
+    mask_needed: bool = Field(description="True if an FFP2/N95 mask is recommended outside")
 
 
 parser = PydanticOutputParser(pydantic_object=AirSafetyCard)
@@ -118,9 +118,9 @@ report_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "Extract a clean structured AirSafetyCard from the assistant's latest air quality response.\n{format_instructions}",
+            "Extract a structured AirSafetyCard from the assistant's latest response.\n{format_instructions}",
         ),
-        ("human", "Extract the structured safety card from this text:\n{response_text}"),
+        ("human", "{response_text}"),
     ]
 ).partial(format_instructions=parser.get_format_instructions())
 
